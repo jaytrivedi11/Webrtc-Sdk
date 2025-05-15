@@ -25,7 +25,7 @@ public class CallActivity extends AppCompatActivity {
         remoteview = findViewById(R.id.remoteVideoView);
 
         VideoChatClient videoChatClient = VideoChatClient.getInstance(this);
-        VideoChatClient.start(CallActivity.this,CallActivity.this,"user1");
+        VideoChatClient.start(CallActivity.this,CallActivity.this,"user2");
 
         localview.addView(videoChatClient.getLocalVideoView());
         remoteview.addView(videoChatClient.getRemoteVideoView());

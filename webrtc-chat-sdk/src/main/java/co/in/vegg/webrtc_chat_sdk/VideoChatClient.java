@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -67,6 +68,8 @@ public class VideoChatClient {
     private static final int FPS = 30;
     private String roomId;
     private String username;
+    private AudioManager audioManager;
+
     private boolean isInitiator = false;
     private boolean isChannelReady = false;
     private boolean isStarted = false;
@@ -358,6 +361,8 @@ public class VideoChatClient {
 
         // Create audio source and track
         MediaConstraints audioConstraints = new MediaConstraints();
+        audioConstraints.optional.add(new MediaConstraints.KeyValuePair("googCpuOveruseDetection", "false"));
+        audioConstraints.optional.add(new MediaConstraints.KeyValuePair("googHighBitrate", "true"));
         audioConstraints.mandatory.add(
                 new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
         audioConstraints.mandatory.add(
@@ -369,6 +374,9 @@ public class VideoChatClient {
 
         AudioSource audioSource = peerConnectionFactory.createAudioSource(audioConstraints);
         localAudioTrack = peerConnectionFactory.createAudioTrack(AUDIO_TRACK_ID, audioSource);
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        audioManager.setSpeakerphoneOn(true);
+
         localAudioTrack.setEnabled(true);
     }
     public View getLocalVideoView() {
@@ -439,6 +447,12 @@ public class VideoChatClient {
 
         // Add video track
         RtpSender videoSender = peerConnection.addTrack(localVideoTrack);
+        RtpParameters parameters = videoSender.getParameters();
+        for (RtpParameters.Encoding encoding : parameters.encodings) {
+            encoding.maxBitrateBps = 2_000_000; // 2 Mbps
+            encoding.maxFramerate = 30;
+        }
+        videoSender.setParameters(parameters);
         senders.add(videoSender);
 
         // Add audio track
@@ -782,6 +796,40 @@ public class VideoChatClient {
     }
 
 
+    private String preferCodec(String sdp, String codec, boolean isOffer) {
+        String[] lines = sdp.split("\r\n");
+        int mLineIndex = -1;
+        String codecRtpMap = null;
+
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].startsWith("m=video")) {
+                mLineIndex = i;
+            }
+            if (lines[i].contains("a=rtpmap") && lines[i].toLowerCase().contains(codec.toLowerCase())) {
+                codecRtpMap = lines[i].split(" ")[0].split(":")[1];
+            }
+        }
+
+        if (mLineIndex == -1 || codecRtpMap == null) return sdp;
+
+        String[] parts = lines[mLineIndex].split(" ");
+        StringBuilder newMLine = new StringBuilder();
+        int partIndex = 0;
+        newMLine.append(parts[partIndex++]); // m=
+        newMLine.append(" ").append(parts[partIndex++]); // video
+        newMLine.append(" ").append(parts[partIndex++]); // port
+        newMLine.append(" ").append(parts[partIndex++]); // RTP/AVP or UDP/TLS/RTP/SAVPF
+
+        newMLine.append(" ").append(codecRtpMap);
+        for (; partIndex < parts.length; partIndex++) {
+            if (!parts[partIndex].equals(codecRtpMap)) {
+                newMLine.append(" ").append(parts[partIndex]);
+            }
+        }
+
+        lines[mLineIndex] = newMLine.toString();
+        return String.join("\r\n", lines);
+    }
 
     // Simple SDP observer implementation
     private class SimpleSdpObserver implements org.webrtc.SdpObserver {
