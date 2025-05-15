@@ -13,6 +13,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import co.in.vegg.webrtc_chat_sdk.AudioClient;
 import co.in.vegg.webrtc_chat_sdk.ChatClient;
 import co.in.vegg.webrtc_chat_sdk.interfaces.MessageCallback;
 
@@ -30,28 +31,40 @@ public class MainActivity extends AppCompatActivity {
         btn = findViewById(R.id.btnJoin);
         message = findViewById(R.id.etMessage);
         send = findViewById(R.id.btnSend);
-        ChatClient chatClient = ChatClient.getInstance(this);
+
+        AudioClient audioClient = AudioClient.getInstance(this);
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ChatClient.start(MainActivity.this, "user1");
+                AudioClient.start(MainActivity.this,MainActivity.this,"user2");
             }
         });
 
-        chatClient.setMessageCallback(new MessageCallback() {
-            @Override
-            public void onMessageReceived(String message) {
-                Log.e("Message",message);
-            }
-        });
 
-        send.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                chatClient.sendMessage(message.getText().toString());
-            }
-        });
+
+//        ChatClient chatClient = ChatClient.getInstance(this);
+//
+//        btn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                ChatClient.start(MainActivity.this, "user1");
+//            }
+//        });
+//
+//        chatClient.setMessageCallback(new MessageCallback() {
+//            @Override
+//            public void onMessageReceived(String message) {
+//                Log.e("Message",message);
+//            }
+//        });
+//
+//        send.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                chatClient.sendMessage(message.getText().toString());
+//            }
+//        });
 
 
         // Get the calculator view from the layout
