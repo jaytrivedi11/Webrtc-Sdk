@@ -1,5 +1,6 @@
 package co.in.vegg.testing;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import co.in.vegg.webrtc_chat_sdk.AudioClient;
 import co.in.vegg.webrtc_chat_sdk.ChatClient;
+import co.in.vegg.webrtc_chat_sdk.VideoChatClient;
 import co.in.vegg.webrtc_chat_sdk.interfaces.MessageCallback;
 
 
@@ -32,14 +34,26 @@ public class MainActivity extends AppCompatActivity {
         message = findViewById(R.id.etMessage);
         send = findViewById(R.id.btnSend);
 
-        AudioClient audioClient = AudioClient.getInstance(this);
+        VideoChatClient videoChatClient = VideoChatClient.getInstance(this);
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AudioClient.start(MainActivity.this,MainActivity.this,"user2");
+
+                Intent intent = new Intent(getApplicationContext(),CallActivity.class);
+                startActivity(intent);
             }
         });
+
+
+//        AudioClient audioClient = AudioClient.getInstance(this);
+//
+//        btn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                AudioClient.start(MainActivity.this,MainActivity.this,"user2");
+//            }
+//        });
 
 
 

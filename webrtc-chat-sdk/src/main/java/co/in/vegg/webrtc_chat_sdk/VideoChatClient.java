@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -92,6 +93,8 @@ public class VideoChatClient {
 
     public VideoChatClient(Context context) {
         this.context = context;
+        localVideoView = new SurfaceViewRenderer(context);
+        remoteVideoView = new SurfaceViewRenderer(context);
     }
     public static synchronized VideoChatClient getInstance(Context context) {
         if (instance == null) {
@@ -99,10 +102,11 @@ public class VideoChatClient {
         }
         return instance;
     }
-    public static void start(Context context,Activity activity){
+    public static void start(Context context,Activity activity,String username){
+
         VideoChatClient videoChatClient = getInstance(context);
         if (videoChatClient.checkPermissions(context)) {
-            videoChatClient.setup();
+            videoChatClient.setup(username);
         } else {
             videoChatClient.requestPermissions(context,activity);
         }
@@ -118,7 +122,9 @@ public class VideoChatClient {
     private void requestPermissions(Context context, Activity activity) {
         ActivityCompat.requestPermissions(activity, REQUIRED_PERMISSIONS, PERMISSION_REQUEST_CODE);
     }
-    private void setup(){
+    private void setup(String user){
+        username = user;
+        roomId = "5678";
         eglBase = EglBase.create();
         VideoChatClient videoChatClient = getInstance(context);
 
@@ -365,7 +371,13 @@ public class VideoChatClient {
         localAudioTrack = peerConnectionFactory.createAudioTrack(AUDIO_TRACK_ID, audioSource);
         localAudioTrack.setEnabled(true);
     }
+    public View getLocalVideoView() {
+        return localVideoView;
+    }
 
+    public View getRemoteVideoView() {
+        return remoteVideoView;
+    }
     private CameraVideoCapturer createVideoCapturer(Context context) {
         CameraVideoCapturer videoCapturer;
         if (Camera2Enumerator.isSupported(context)) {
